@@ -1,0 +1,4 @@
+#enviroments
+.env
+tmp
+.air.toml
