@@ -37,6 +37,10 @@ func main() {
 		&models.Usuario{},
 		&models.Agencia{},
 		&models.AtraccionTuristica{},
+
+		&models.PaqueteTuristico{},
+		&models.PaqueteAtraccion{},
+		&models.Reservas{},
 	); err != nil {
 		log.Fatal("Error al migrar los modelos de la db:", err)
 	}

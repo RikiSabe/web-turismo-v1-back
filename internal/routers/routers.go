@@ -21,8 +21,11 @@ func endPointsAPI(api *mux.Router) {
 	v1Agencias := v1.PathPrefix("/agencias").Subrouter()
 	v1Roles := v1.PathPrefix("/roles").Subrouter()
 	v1Usuarios := v1.PathPrefix("/usuarios").Subrouter()
+	v1Reservas := v1.PathPrefix("/reservas").Subrouter()
+	v1PaquetesTuristicos := v1.PathPrefix("/paquetes-turisticos").Subrouter()
 
 	// Auth
+	// v1
 	v1.HandleFunc("/loginweb", c.Auth.AuthLoginWeb).Methods(http.MethodPost)
 
 	// Atracciones turisticas
@@ -53,4 +56,14 @@ func endPointsAPI(api *mux.Router) {
 	v1Usuarios.HandleFunc("", c.ObtenerUsuarios).Methods(http.MethodGet)
 	v1Usuarios.HandleFunc("", c.AgregarUsuario).Methods(http.MethodPost)
 
+	// Reservas
+	// v1
+	v1Reservas.HandleFunc("/usuario/{id}", c.ObtenerReservasUsuario).Methods(http.MethodGet)
+	v1Reservas.HandleFunc("", c.HacerReserva).Methods(http.MethodPost)
+
+	// Paquetes turisticos
+	// v1
+	v1PaquetesTuristicos.HandleFunc("", c.ObtenerPaquetesTuristicos).Methods(http.MethodGet)
+	v1PaquetesTuristicos.HandleFunc("/{id}", c.ObtenerPaqueteTuristico).Methods(http.MethodGet)
+	v1PaquetesTuristicos.HandleFunc("", c.CrearPaqueteTuristico).Methods(http.MethodPost)
 }
