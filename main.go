@@ -7,6 +7,7 @@ import (
 	"web-turismo-v1/internal/db"
 	"web-turismo-v1/internal/models"
 	"web-turismo-v1/internal/routers"
+	"web-turismo-v1/internal/seed"
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
@@ -41,8 +42,15 @@ func main() {
 		&models.PaqueteTuristico{},
 		&models.PaqueteAtraccion{},
 		&models.Reservas{},
+
+		&models.Departamento{},
+		&models.Provincia{},
 	); err != nil {
 		log.Fatal("Error al migrar los modelos de la db:", err)
+	}
+
+	if err := seed.SeedDatosBolivia(db.GDB, "internal/sql/departamentos_provincias_bolivia.sql"); err != nil {
+		log.Printf("Error en el seed: %v", err)
 	}
 
 	r := mux.NewRouter()
