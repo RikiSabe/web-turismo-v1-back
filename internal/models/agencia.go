@@ -5,12 +5,18 @@ import (
 )
 
 type Agencia struct {
-	ID                uint   `gorm:"column:id_agencia;primaryKey;autoIncrement" json:"id"`
-	Nombre            string `gorm:"size:255;not null" json:"nombre"`
-	Direccion         string `gorm:"size:255;not null" json:"direccion"`
-	Telefono          string `gorm:"size:50" json:"telefono"`
-	CorreoElectronico string `gorm:"column:correo_electronico;size:255" json:"correo_electronico"`
-	Estado            bool   `gorm:"not null;default:true" json:"estado"`
+	ID             uint   `gorm:"column:id_agencia;primaryKey;autoIncrement" json:"id"`
+	Nombre         string `gorm:"column:nombre;size:255;not null" json:"nombre"`
+	Direccion      string `gorm:"column:direccion;size:255;not null" json:"direccion"`
+	Telefono       string `gorm:"column:telefono;size:50" json:"telefono"`
+	Correo         string `gorm:"column:correo;size:255" json:"correo"`
+	Estado         bool   `gorm:"not null;default:true" json:"estado"`
+	IdEncargado    uint   `gorm:"column:id_encargado" json:"id_encargado"`
+	Descripcion    string `gorm:"column:descripcion;size:255" json:"descripcion"`
+	IdDepartamento uint   `gorm:"column:id_departamento" json:"id_departamento"`
+
+	Usuario      Usuario      `gorm:"foreignKey:IdEncargado;references:ID" json:"-"`
+	Departamento Departamento `gorm:"foreignKey:IdDepartamento;references:ID" json:"-"`
 
 	CreatedAt time.Time `gorm:"default:now()" json:"-"`
 	UpdatedAt time.Time `json:"-"`

@@ -32,9 +32,6 @@ func main() {
 
 	if err := db.GDB.AutoMigrate(
 		/* migraciones */
-		&models.Rol{},
-		&models.Permiso{},
-		&models.RolPermiso{},
 		&models.Usuario{},
 		&models.Agencia{},
 		&models.AtraccionTuristica{},
@@ -45,6 +42,9 @@ func main() {
 
 		&models.Departamento{},
 		&models.Provincia{},
+
+		&models.FotosAgencia{},
+		&models.FotosAtracciones{},
 	); err != nil {
 		log.Fatal("Error al migrar los modelos de la db:", err)
 	}

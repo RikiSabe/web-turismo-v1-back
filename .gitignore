@@ -1,4 +1,10 @@
 #enviroments
 .env
+
+#files for air
 tmp
 .air.toml
+
+#files on images/users
+internal/images/usuarios/*
+!internal/images/usuarios/

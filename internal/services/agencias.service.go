@@ -6,7 +6,7 @@ var QueryAgenciasTODO = `
 		a.nombre, 
 		a.direccion, 
 		a.telefono, 
-		a.correo_electronico, 
+		a.correo, 
 		a.estado
 	FROM "GestAgencias" as a
 	ORDER BY id_agencia ASC`
@@ -17,7 +17,7 @@ var QueryAgenciaUnique = `
 		a.nombre, 
 		a.direccion, 
 		a.telefono, 
-		a.correo_electronico, 
+		a.correo, 
 		a.estado
 	FROM "GestAgencias" as a
 	WHERE id_agencia = ?
