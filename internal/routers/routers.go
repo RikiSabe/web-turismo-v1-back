@@ -19,7 +19,7 @@ func endPointsAPI(api *mux.Router) {
 
 	// Prefix
 	// v1
-	v1AtraccionesTuristicas := v1.PathPrefix("/atracciones-turisticas").Subrouter()
+	v1AtraccionesTuristicas := v2.PathPrefix("/atracciones-turisticas").Subrouter()
 	v1Agencias := v1.PathPrefix("/agencias").Subrouter()
 	v1Usuarios := v1.PathPrefix("/usuarios").Subrouter()
 	v1Reservas := v1.PathPrefix("/reservas").Subrouter()

@@ -8,3 +8,7 @@ tmp
 #files on images/users
 internal/images/usuarios/*
 !internal/images/usuarios/
+
+#files on images/atracciones
+internal/images/atracciones/*
+!internal/images/atracciones/
