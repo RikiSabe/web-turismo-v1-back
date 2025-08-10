@@ -19,7 +19,6 @@ func endPointsAPI(api *mux.Router) {
 
 	// Prefix
 	// v1
-	v1AtraccionesTuristicas := v2.PathPrefix("/atracciones-turisticas").Subrouter()
 	v1Agencias := v1.PathPrefix("/agencias").Subrouter()
 	v1Usuarios := v1.PathPrefix("/usuarios").Subrouter()
 	v1Reservas := v1.PathPrefix("/reservas").Subrouter()
@@ -28,15 +27,17 @@ func endPointsAPI(api *mux.Router) {
 	v1Provincias := v1.PathPrefix("/provincias").Subrouter()
 	// v2
 	v2Usuarios := v2.PathPrefix("/usuarios").Subrouter()
+	v2AtraccionesTuristicas := v2.PathPrefix("/atracciones-turisticas").Subrouter()
 
 	// Auth
 	v1.HandleFunc("/loginweb", c.Auth.AuthLoginWeb).Methods(http.MethodPost)
 
 	// Atracciones turisticas
-	v1AtraccionesTuristicas.HandleFunc("/{id}", c.ObtenerAtraccionTuristica).Methods(http.MethodGet)
-	v1AtraccionesTuristicas.HandleFunc("/{id}", c.ModificarAtraccionTuristica).Methods(http.MethodPut)
-	v1AtraccionesTuristicas.HandleFunc("", c.ObtenerAtraccionesTuristicas).Methods(http.MethodGet)
-	v1AtraccionesTuristicas.HandleFunc("", c.AgregarAtraccionTuristica).Methods(http.MethodPost)
+	v2AtraccionesTuristicas.HandleFunc("/{id}", c.ObtenerAtraccionTuristica).Methods(http.MethodGet)
+	v2AtraccionesTuristicas.HandleFunc("/{id}", c.ModificarAtraccionTuristica).Methods(http.MethodPut)
+	v2AtraccionesTuristicas.HandleFunc("", c.ObtenerAtraccionesTuristicas).Methods(http.MethodGet)
+	v2AtraccionesTuristicas.HandleFunc("", c.AgregarAtraccionTuristica).Methods(http.MethodPost)
+	v2AtraccionesTuristicas.HandleFunc("/encargado/{id}", c.ObtenerEncargadoAtraccionTuristica).Methods(http.MethodGet)
 
 	// Agencias
 	v1Agencias.HandleFunc("/{id}", c.ObtenerAgencia).Methods(http.MethodGet)

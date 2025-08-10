@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 	"web-turismo-v1/internal/db"
 	"web-turismo-v1/internal/models"
 	"web-turismo-v1/internal/routers"
@@ -51,6 +52,31 @@ func main() {
 
 	if err := seed.SeedDatosBolivia(db.GDB, "internal/sql/departamentos_provincias_bolivia.sql"); err != nil {
 		log.Printf("Error en el seed: %v", err)
+	}
+	var count int64
+	err = db.GDB.Model(&models.Usuario{}).Count(&count).Error
+	if err == nil && count == 0 {
+		usuario := models.Usuario{
+			ID:              1,
+			Rol:             "admin",
+			Nombre:          "Juan",
+			ApellidoPaterno: "Pérez",
+			ApellidoMaterno: "Gómez",
+			FechaNacimiento: time.Date(1995, 6, 15, 0, 0, 0, 0, time.UTC),
+			CI:              "12345678",
+			Correo:          "juan.perez@example.com",
+			Telefono:        "70000000",
+			Contra:          "123456",
+			Estado:          true,
+			Foto:            "N/A",
+			IdUbicacion:     2,
+		}
+		if err := db.GDB.Create(&usuario).Error; err != nil {
+			log.Printf("Primer usuario creador exitosamente: %v", err)
+		} else {
+			log.Printf("Error al crear el primer usuario")
+			return
+		}
 	}
 
 	r := mux.NewRouter()
