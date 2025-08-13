@@ -169,7 +169,70 @@ func AgregarAtraccionTuristica(w http.ResponseWriter, r *http.Request) {
 }
 
 func ModificarAtraccionTuristica(w http.ResponseWriter, r *http.Request) {
-	// code
+	idStr := mux.Vars(r)["id"]
+
+	var atraccion models.AtraccionTuristica
+	if err := db.GDB.Where("id_atraccion = ?", idStr).First(&atraccion).Error; err != nil {
+		http.Error(w, "Atraccion no encontrada", http.StatusNotFound)
+		return
+	}
+
+	err := r.ParseMultipartForm(10 << 20) // 10MB
+	if err != nil {
+		http.Error(w, "Error al parsear el formulario: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	nuevoPrecio := float64(0)
+
+	precioStr := r.FormValue("precio")
+	if precioStr != "" {
+		parsed, err := strconv.ParseFloat(precioStr, 64)
+		if err != nil {
+			http.Error(w, "El precio debe ser un número válido", http.StatusBadRequest)
+			return
+		}
+		nuevoPrecio = parsed
+	}
+
+	idUbicacion := uint(0)
+	if idUbicacionStr := r.FormValue("id_ubicacion"); idUbicacionStr != "" {
+		parsed, err := strconv.ParseUint(idUbicacionStr, 10, 64)
+		if err != nil {
+			http.Error(w, "id_ubicacion debe ser un número válido", http.StatusBadRequest)
+			return
+		}
+		idUbicacion = uint(parsed)
+	}
+
+	idEncargado := uint(0)
+	if idEncargadoStr := r.FormValue("id_encargado"); idEncargadoStr != "" {
+		parsed, err := strconv.ParseUint(idEncargadoStr, 10, 64)
+		if err != nil {
+			http.Error(w, "id_encargado debe ser un número válido", http.StatusBadRequest)
+			return
+		}
+		idEncargado = uint(parsed)
+	}
+
+	atraccion.Nombre = r.FormValue("nombre")
+	atraccion.Categoria = r.FormValue("tipo")
+	atraccion.Direccion = r.FormValue("ubicacion")
+	atraccion.Descripcion = r.FormValue("descripcion")
+	atraccion.HorarioApertura = r.FormValue("horario_apertura")
+	atraccion.HorarioCierre = r.FormValue("horario_cierre")
+	atraccion.Precio = float64(nuevoPrecio)
+	atraccion.Estado = r.FormValue("estado") == "true"
+	atraccion.IdEncargado = idEncargado
+	atraccion.IdUbicacion = idUbicacion
+
+	if err := db.GDB.Save(&atraccion).Error; err != nil {
+		http.Error(w, "Error al actualizar el usuario", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(atraccion)
 }
 
 func ObtenerEncargadoAtraccionTuristica(w http.ResponseWriter, r *http.Request) {

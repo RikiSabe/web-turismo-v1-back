@@ -50,6 +50,7 @@ func CrearPaqueteTuristico(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error al agregar Paquete Turistico", http.StatusInternalServerError)
 		return
 	}
+
 	for _, idAtraccion := range bodyStruct.IDAtracciones {
 		if err := tx.Create(&models.PaqueteAtraccion{IDPaquete: paqueteTuristico.ID, IDAtraccion: idAtraccion}).Error; err != nil {
 			tx.Rollback()
@@ -60,12 +61,7 @@ func CrearPaqueteTuristico(w http.ResponseWriter, r *http.Request) {
 	tx.Commit()
 
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-
-	if err := json.NewEncoder(w).Encode(&bodyStruct); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	json.NewEncoder(w).Encode(&bodyStruct)
 }
 
 func ObtenerPaquetesTuristicos(w http.ResponseWriter, r *http.Request) {

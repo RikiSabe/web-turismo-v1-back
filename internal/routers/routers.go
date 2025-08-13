@@ -54,7 +54,10 @@ func endPointsAPI(api *mux.Router) {
 
 	// Reservas
 	v1Reservas.HandleFunc("/usuario/{id}", c.ObtenerReservasUsuario).Methods(http.MethodGet)
+	v1Reservas.HandleFunc("/decision/{id}", c.DecisionReserva).Methods(http.MethodPost)
+	v1Reservas.HandleFunc("/{id}", c.ObtenerReserva).Methods(http.MethodGet)
 	v1Reservas.HandleFunc("", c.HacerReserva).Methods(http.MethodPost)
+	v1Reservas.HandleFunc("", c.ObtenerReservas).Methods(http.MethodGet)
 
 	// Paquetes turisticos
 	v1PaquetesTuristicos.HandleFunc("", c.ObtenerPaquetesTuristicos).Methods(http.MethodGet)

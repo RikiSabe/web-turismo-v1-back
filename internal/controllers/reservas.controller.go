@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"web-turismo-v1/internal/db"
 	"web-turismo-v1/internal/models"
@@ -10,6 +11,44 @@ import (
 
 	"github.com/gorilla/mux"
 )
+
+func ObtenerReservas(w http.ResponseWriter, r *http.Request) {
+	var reservas []types.ReservaDTO
+
+	if err := db.GDB.Raw(services.QueryReservasTODO).Scan(&reservas).Error; err != nil {
+		http.Error(w, "Error al obtener reservas del usuario", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(reservas)
+}
+
+func ObtenerReserva(w http.ResponseWriter, r *http.Request) {
+	id_reserva := mux.Vars(r)["id"]
+
+	query := `
+		select 
+			r.estado, 
+			pt.nombre 
+		from "GestReservas"as r 
+		join "GestPaquetesTuristicos" as pt on pt.id_paquete_turistico = r.id_paquete
+		where r.id_reserva = ?`
+
+	type res struct {
+		Nombre string `json:"nombre"`
+		Estado bool   `json:"estado"`
+	}
+
+	var reserva res
+	if err := db.GDB.Raw(query, id_reserva).Scan(&reserva).Error; err != nil {
+		http.Error(w, "Error en la consula", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(reserva)
+}
 
 func ObtenerReservasUsuario(w http.ResponseWriter, r *http.Request) {
 	idUsuario := mux.Vars(r)["id"]
@@ -36,17 +75,52 @@ func HacerReserva(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	b, err := json.MarshalIndent(reserva, "", "  ")
+	if err != nil {
+		fmt.Println("Error al convertir a JSON:", err)
+		return
+	}
+	fmt.Println(string(b))
+
 	tx := db.GDB.Begin()
-	if err := db.GDB.Create(&reserva).Error; err != nil {
+	if err := tx.Create(&reserva).Error; err != nil {
 		http.Error(w, "Error al crear la reserva", http.StatusInternalServerError)
 		return
 	}
 	tx.Commit()
 
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-	if err := json.NewEncoder(w).Encode(reserva); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	json.NewEncoder(w).Encode(reserva)
+}
+
+func DecisionReserva(w http.ResponseWriter, r *http.Request) {
+	id_reserva := mux.Vars(r)["id"]
+
+	type Body struct {
+		Estado bool `json:"estado"`
+	}
+
+	var decision Body
+
+	if err := json.NewDecoder(r.Body).Decode(&decision); err != nil {
+		http.Error(w, "Error al decodificar el cuerpo de la solicitud", http.StatusBadRequest)
 		return
 	}
+
+	var reserva models.Reservas
+	if err := db.GDB.First(&reserva, "id_reserva = ?", id_reserva).Error; err != nil {
+		http.Error(w, "Error en la consulta", http.StatusInternalServerError)
+		return
+	}
+
+	fmt.Printf("error %v\n", decision.Estado)
+	reserva.Estado = decision.Estado
+
+	if err := db.GDB.Save(&reserva).Error; err != nil {
+		http.Error(w, "Error al decidir reserva", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(reserva)
 }
