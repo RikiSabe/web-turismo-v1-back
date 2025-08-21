@@ -66,6 +66,8 @@ func ObtenerAtraccionTuristica(w http.ResponseWriter, r *http.Request) {
 	}
 	atraccion.Fotos = datatypes.NewJSONType(fotos)
 
+	fmt.Printf("direccion %s", atraccion.Direccion)
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(&atraccion)
 }
@@ -173,63 +175,93 @@ func ModificarAtraccionTuristica(w http.ResponseWriter, r *http.Request) {
 
 	var atraccion models.AtraccionTuristica
 	if err := db.GDB.Where("id_atraccion = ?", idStr).First(&atraccion).Error; err != nil {
-		http.Error(w, "Atraccion no encontrada", http.StatusNotFound)
+		http.Error(w, "Atracción no encontrada", http.StatusNotFound)
 		return
 	}
 
-	err := r.ParseMultipartForm(10 << 20) // 10MB
+	err := r.ParseMultipartForm(50 << 20) // 50 MB
 	if err != nil {
 		http.Error(w, "Error al parsear el formulario: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	nuevoPrecio := float64(0)
+	precio, _ := strconv.ParseFloat(r.FormValue("precio"), 64)
+	idUbicacion, _ := strconv.ParseUint(r.FormValue("id_ubicacion"), 10, 64)
+	idEncargado, _ := strconv.ParseUint(r.FormValue("id_encargado"), 10, 64)
 
-	precioStr := r.FormValue("precio")
-	if precioStr != "" {
-		parsed, err := strconv.ParseFloat(precioStr, 64)
-		if err != nil {
-			http.Error(w, "El precio debe ser un número válido", http.StatusBadRequest)
-			return
-		}
-		nuevoPrecio = parsed
-	}
-
-	idUbicacion := uint(0)
-	if idUbicacionStr := r.FormValue("id_ubicacion"); idUbicacionStr != "" {
-		parsed, err := strconv.ParseUint(idUbicacionStr, 10, 64)
-		if err != nil {
-			http.Error(w, "id_ubicacion debe ser un número válido", http.StatusBadRequest)
-			return
-		}
-		idUbicacion = uint(parsed)
-	}
-
-	idEncargado := uint(0)
-	if idEncargadoStr := r.FormValue("id_encargado"); idEncargadoStr != "" {
-		parsed, err := strconv.ParseUint(idEncargadoStr, 10, 64)
-		if err != nil {
-			http.Error(w, "id_encargado debe ser un número válido", http.StatusBadRequest)
-			return
-		}
-		idEncargado = uint(parsed)
-	}
-
+	atraccion.Categoria = r.FormValue("categoria")
 	atraccion.Nombre = r.FormValue("nombre")
-	atraccion.Categoria = r.FormValue("tipo")
-	atraccion.Direccion = r.FormValue("ubicacion")
+	atraccion.Direccion = r.FormValue("direccion")
 	atraccion.Descripcion = r.FormValue("descripcion")
 	atraccion.HorarioApertura = r.FormValue("horario_apertura")
 	atraccion.HorarioCierre = r.FormValue("horario_cierre")
-	atraccion.Precio = float64(nuevoPrecio)
+	atraccion.Precio = precio
 	atraccion.Estado = r.FormValue("estado") == "true"
-	atraccion.IdEncargado = idEncargado
-	atraccion.IdUbicacion = idUbicacion
+	atraccion.IdEncargado = uint(idEncargado)
+	atraccion.IdUbicacion = uint(idUbicacion)
 
-	if err := db.GDB.Save(&atraccion).Error; err != nil {
-		http.Error(w, "Error al actualizar el usuario", http.StatusInternalServerError)
+	tx := db.GDB.Begin()
+	if err := tx.Save(&atraccion).Error; err != nil {
+		tx.Rollback()
+		http.Error(w, "Error al actualizar la atracción", http.StatusInternalServerError)
 		return
 	}
+	files := r.MultipartForm.File["fotos[]"]
+	if len(files) > 0 {
+		if err := tx.Where("id_atraccion = ?", atraccion.ID).Delete(&models.FotosAtracciones{}).Error; err != nil {
+			tx.Rollback()
+			http.Error(w, "Error al eliminar fotos anteriores", http.StatusInternalServerError)
+			return
+		}
+		for _, fileHeader := range files {
+			file, err := fileHeader.Open()
+			if err != nil {
+				tx.Rollback()
+				http.Error(w, "Error al abrir una foto: "+err.Error(), http.StatusInternalServerError)
+				return
+			}
+			defer file.Close()
+
+			ext := filepath.Ext(fileHeader.Filename)
+			OrdenFoto, err := strconv.Atoi(strings.TrimSuffix((fileHeader.Filename), ext))
+			if err != nil {
+				tx.Rollback()
+				http.Error(w, "Error al procesar el orden de la foto", http.StatusBadRequest)
+				return
+			}
+
+			nombreFoto := fmt.Sprintf("foto_atraccion_%s%s", uuid.New().String(), ext)
+			rutaFoto := "internal/images/atracciones/" + nombreFoto
+
+			outFile, err := os.Create(rutaFoto)
+			if err != nil {
+				tx.Rollback()
+				http.Error(w, "Error al guardar la foto en disco", http.StatusInternalServerError)
+				return
+			}
+			defer outFile.Close()
+
+			if _, err := io.Copy(outFile, file); err != nil {
+				tx.Rollback()
+				http.Error(w, "Error al escribir la foto", http.StatusInternalServerError)
+				return
+			}
+
+			foto := models.FotosAtracciones{
+				IdAtraccion: atraccion.ID,
+				Foto:        rutaFoto,
+				Orden:       uint(OrdenFoto),
+			}
+
+			if err := tx.Create(&foto).Error; err != nil {
+				tx.Rollback()
+				http.Error(w, "Error al guardar la foto en base de datos", http.StatusInternalServerError)
+				return
+			}
+		}
+	}
+
+	tx.Commit()
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(atraccion)
