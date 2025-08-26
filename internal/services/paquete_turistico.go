@@ -14,19 +14,20 @@ var QueryPaqueteTuristicoTODO = `
     p.id_agencia,
     json_agg(
 			DISTINCT jsonb_build_object(
-				'id', a.id_atracciones,
-				'tipo', a.tipo,
+				'id', a.id_atraccion,
+				'categoria', a.categoria,
 				'nombre', a.nombre,
-				'ubicacion', a.ubicacion,
+				'ubicacion', a.direccion,
 				'descripcion', a.descripcion,
-				'horarios', a.horarios,
+				'horario_apertura', a.horario_apertura,
+				'horario_cierre', a.horario_cierre,
 				'precio', a.precio,
 				'estado', a.estado
 			)
-    ) FILTER (WHERE a.id_atracciones IS NOT NULL) AS atracciones
+    ) FILTER (WHERE a.id_atraccion IS NOT NULL) AS atracciones
 	FROM "GestPaquetesTuristicos" as p
 	LEFT JOIN "PaquetesAtracciones" as pa ON p.id_paquete_turistico = pa.id_paquete
-	LEFT JOIN "GestAtraccionesTuristicas" as a ON pa.id_atraccion = a.id_atracciones
+	LEFT JOIN "GestAtraccionesTuristicas" as a ON pa.id_atraccion = a.id_atraccion
 	GROUP BY 
 		p.id_paquete_turistico,
 		p.categoria,
@@ -54,19 +55,20 @@ var QueryPaqueteTuristicoTODOByID = `
 		p.id_agencia,
 		json_agg(
 			DISTINCT jsonb_build_object(
-				'id', a.id_atracciones,
-				'tipo', a.tipo,
+				'id', a.id_atraccion,
+				'tipo', a.categoria,
 				'nombre', a.nombre,
-				'ubicacion', a.ubicacion,
+				'ubicacion', a.direccion,
 				'descripcion', a.descripcion,
-				'horarios', a.horarios,
+				'horario_apertura', a.horario_apertura,
+				'horario_cierre', a.horario_cierre,
 				'precio', a.precio,
 				'estado', a.estado
 			)
-		) FILTER (WHERE a.id_atracciones IS NOT NULL) AS atracciones
+		) FILTER (WHERE a.id_atraccion IS NOT NULL) AS atracciones
 	FROM "GestPaquetesTuristicos" AS p
 	LEFT JOIN "PaquetesAtracciones" AS pa ON p.id_paquete_turistico = pa.id_paquete
-	LEFT JOIN "GestAtraccionesTuristicas" AS a ON pa.id_atraccion = a.id_atracciones
+	LEFT JOIN "GestAtraccionesTuristicas" AS a ON pa.id_atraccion = a.id_atraccion
 	WHERE p.id_paquete_turistico = ?
 	GROUP BY 
 		p.id_paquete_turistico,

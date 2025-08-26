@@ -7,14 +7,15 @@ import (
 )
 
 type atraccionTuristicaEnlazada struct {
-	ID          uint    `json:"id"`
-	Tipo        string  `json:"tipo"`
-	Nombre      string  `json:"nombre"`
-	Ubicacion   string  `json:"ubicacion"`
-	Descripcion string  `json:"descripcion"`
-	Horarios    string  `json:"horarios"`
-	Precio      float64 `json:"precio"`
-	Estado      bool    `json:"estado"`
+	ID              uint    `json:"id"`
+	Categoria       string  `json:"categoria"`
+	Nombre          string  `json:"nombre"`
+	Ubicacion       string  `json:"ubicacion"`
+	Descripcion     string  `json:"descripcion"`
+	HorarioApertura string  `json:"horario_apertura"`
+	HorarioCierre   string  `json:"horario_cierre"`
+	Precio          float64 `json:"precio"`
+	Estado          bool    `json:"estado"`
 }
 
 type PaqueteTuristicoTODO struct {

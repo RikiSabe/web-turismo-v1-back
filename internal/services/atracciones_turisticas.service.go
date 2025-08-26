@@ -34,7 +34,8 @@ var QueryAtraccionesTuristicasTODO = `
     at.horario_apertura, at.horario_cierre, at.precio, at.estado,
     u.id_usuario, u.nombre, u.apellido_paterno, u.apellido_materno,
     pro.id_provincia, pro.nombre,
-    d.id_departamento, d.nombre;`
+    d.id_departamento, d.nombre
+  ORDER BY at.id_atraccion asc;`
 
 var QueryAtraccionesTuristicaUnique = `
 	SELECT 
@@ -98,3 +99,14 @@ var QueryAtraccionesTuristicasEnlazadas = `
 	FROM "GestAtraccionesTuristicas" as at, "PaquetesAtracciones" as pa
 	WHERE at.id_atracciones = pa.id_atraccion
 	AND pa.id_paquete = ?`
+
+var QueryEncargadoAtraccionTuristicas = `
+  SELECT
+    concat(u.nombre, ' ', u.apellido_paterno, ' ', u.apellido_materno) as nombre_completo,
+    u.foto as src,
+    u.ci,
+    u.correo, 
+    u.telefono
+  FROM "GestUsuarios" as u
+  WHERE u.id_usuario = ?
+  limit 1;`

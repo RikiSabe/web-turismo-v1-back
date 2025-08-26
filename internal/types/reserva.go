@@ -12,3 +12,15 @@ type ReservaTODO struct {
 	IDUsuario uint `json:"id_usuario"`
 	IDPaquete uint `json:"id_paquete"`
 }
+
+type ReservaDTO struct {
+	ID             uint      `json:"id"`
+	Fecha          time.Time `json:"fecha"`
+	Descripcion    string    `json:"descripcion"`
+	NumeroPersonas int       `json:"numero_personas"`
+	Estado         bool      `json:"estado"`
+	IDUsuario      uint      `json:"id_usuario"`
+	NombreUsuario  string    `json:"nombre_usuario"`
+	IDPaquete      uint      `json:"id_paquete"`
+	NombrePaquete  string    `json:"nombre_paquete"`
+}
