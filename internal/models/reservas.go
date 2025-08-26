@@ -4,10 +4,10 @@ import "time"
 
 type Reservas struct {
 	ID             uint      `gorm:"column:id_reserva;primaryKey;autoIncrement" json:"id"`
-	Fecha          time.Time `gorm:"not null" json:"fecha"`
-	Descripcion    string    `gorm:"size:500;not null" json:"descripcion"`
-	NumeroPersonas int       `gorm:"not null" json:"numero_personas"`
-	Estado         bool      `gorm:"not null" json:"estado"`
+	Fecha          time.Time `gorm:"column:descripcion;not null" json:"fecha"`
+	Descripcion    string    `gorm:"column:descripcion;size:500;not null" json:"descripcion"`
+	NumeroPersonas int       `gorm:"column:numero_personas;not null" json:"numero_personas"`
+	Estado         bool      `gorm:"column:estado;not null" json:"estado"`
 
 	IDUsuario uint `gorm:"column:id_usuario;not null" json:"id_usuario"`
 	IDPaquete uint `gorm:"column:id_paquete;not null" json:"id_paquete"`

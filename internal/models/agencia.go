@@ -10,7 +10,7 @@ type Agencia struct {
 	Direccion      string `gorm:"column:direccion;size:255;not null" json:"direccion"`
 	Telefono       string `gorm:"column:telefono;size:50" json:"telefono"`
 	Correo         string `gorm:"column:correo;size:255" json:"correo"`
-	Estado         bool   `gorm:"not null;default:true" json:"estado"`
+	Estado         bool   `gorm:"column:estado;not null;default:true" json:"estado"`
 	IdEncargado    uint   `gorm:"column:id_encargado" json:"id_encargado"`
 	Descripcion    string `gorm:"column:descripcion;size:255" json:"descripcion"`
 	IdDepartamento uint   `gorm:"column:id_departamento" json:"id_departamento"`

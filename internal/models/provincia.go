@@ -4,8 +4,8 @@ import "time"
 
 type Provincia struct {
 	ID     uint   `gorm:"column:id_provincia;primaryKey;autoIncrement" json:"id"`
-	Nombre string `gorm:"size:255;not null" json:"nombre"`
-	Estado bool   `gorm:"not null;default:true" json:"estado"`
+	Nombre string `gorm:"column:nombre;size:255;not null" json:"nombre"`
+	Estado bool   `gorm:"column:estado;not null;default:true" json:"estado"`
 
 	IDDepartamento uint `gorm:"column:id_departamento;not null" json:"id_departamento"`
 
