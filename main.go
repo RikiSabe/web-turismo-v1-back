@@ -46,13 +46,21 @@ func main() {
 
 		&models.FotosAgencia{},
 		&models.FotosAtracciones{},
+
+		&models.Categoria{},
+		&models.SubCategoria{},
 	); err != nil {
 		log.Fatal("Error al migrar los modelos de la db:", err)
 	}
 
 	if err := seed.SeedDatosBolivia(db.GDB, "internal/sql/departamentos_provincias_bolivia.sql"); err != nil {
-		log.Printf("Error en el seed: %v", err)
+		log.Printf("Error en el seed de Departamentos: %v", err)
 	}
+
+	if err := seed.SeedDatosCategoriaSubCategoria(db.GDB, "internal/sql/categorias_subcategorias.sql"); err != nil {
+		log.Printf("Error en el seed de Categorias: %v", err)
+	}
+
 	var count int64
 	err = db.GDB.Model(&models.Usuario{}).Count(&count).Error
 	if err == nil && count == 0 {
@@ -71,7 +79,7 @@ func main() {
 			Foto:            "N/A",
 			IdUbicacion:     2,
 		}
-		if err := db.GDB.Create(&usuario).Error; err != nil {
+		if err := db.GDB.Create(&usuario).Error; err == nil {
 			log.Printf("Primer usuario creador exitosamente: %v", err)
 		} else {
 			log.Printf("Error al crear el primer usuario")

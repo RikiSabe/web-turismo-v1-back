@@ -8,7 +8,7 @@ type AtraccionTuristica struct {
 	ID              uint    `gorm:"column:id_atraccion;primaryKey;autoIncrement" json:"id"`
 	IdEncargado     uint    `gorm:"column:id_encargado" json:"id_encargado"`
 	IdUbicacion     uint    `gorm:"column:id_ubicacion" json:"id_ubicacion"`
-	Categoria       string  `gorm:"column:categoria;size:255;not null" json:"categoria"`
+	Categoria       string  `gorm:"column:categoria;size:255;not null" json:"categoria"` // eliminar
 	Nombre          string  `gorm:"column:nombre;size:255;not null" json:"nombre"`
 	Direccion       string  `gorm:"column:direccion;size:255;not null" json:"direccion"`
 	Descripcion     string  `gorm:"column:descripcion;not null" json:"descripcion"`

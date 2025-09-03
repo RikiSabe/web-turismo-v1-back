@@ -100,7 +100,6 @@ func AgregarAtraccionTuristica(w http.ResponseWriter, r *http.Request) {
 	nuevaAtraccion := models.AtraccionTuristica{
 		IdEncargado:     uint(idEncargado),
 		IdUbicacion:     uint(idUbicacion),
-		Categoria:       r.FormValue("categoria"),
 		Nombre:          r.FormValue("nombre"),
 		Direccion:       r.FormValue("direccion"),
 		Descripcion:     r.FormValue("descripcion"),
@@ -189,7 +188,6 @@ func ModificarAtraccionTuristica(w http.ResponseWriter, r *http.Request) {
 	idUbicacion, _ := strconv.ParseUint(r.FormValue("id_ubicacion"), 10, 64)
 	idEncargado, _ := strconv.ParseUint(r.FormValue("id_encargado"), 10, 64)
 
-	atraccion.Categoria = r.FormValue("categoria")
 	atraccion.Nombre = r.FormValue("nombre")
 	atraccion.Direccion = r.FormValue("direccion")
 	atraccion.Descripcion = r.FormValue("descripcion")
