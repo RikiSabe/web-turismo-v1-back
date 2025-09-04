@@ -61,3 +61,30 @@ func SeedDatosCategoriaSubCategoria(db *gorm.DB, sqlFilePath string) error {
 	fmt.Println("Seed de Categoria ejecutado correctamente desde archivo SQL")
 	return nil
 }
+
+func SeedDiaSemana(db *gorm.DB, sqlFilePath string) error {
+	var countDias int64
+	if err := db.Model(&models.Dia{}).Count(&countDias).Error; err != nil {
+		return fmt.Errorf("error al contar dias: %v", err)
+	}
+	if countDias > 0 {
+		fmt.Println("Dias ya precargados, omitiendo seed")
+		return nil
+	}
+
+	// Leer el archivo .sql
+	sqlBytes, err := os.ReadFile(sqlFilePath)
+	if err != nil {
+		return fmt.Errorf("error al leer archivo SQL: %v", err)
+	}
+
+	sqlText := string(sqlBytes)
+
+	// Ejecutar el contenido del archivo SQL
+	if err := db.Exec(sqlText).Error; err != nil {
+		return fmt.Errorf("error al ejecutar SQL: %v", err)
+	}
+
+	fmt.Println("Seed de Dias ejecutado correctamente desde archivo SQL")
+	return nil
+}

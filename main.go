@@ -53,6 +53,8 @@ func main() {
 		&models.Dia{},
 		&models.Salida{},
 		&models.VigenciaDiasConcurrentes{},
+		&models.VigenciaRango{},
+		&models.VigenciaUnica{},
 	); err != nil {
 		log.Fatal("Error al migrar los modelos de la db:", err)
 	}
@@ -63,6 +65,10 @@ func main() {
 
 	if err := seed.SeedDatosCategoriaSubCategoria(db.GDB, "internal/sql/categorias_subcategorias.sql"); err != nil {
 		log.Printf("Error en el seed de Categorias: %v", err)
+	}
+
+	if err := seed.SeedDiaSemana(db.GDB, "internal/sql/dias_semana.sql"); err != nil {
+		log.Printf("Error en el seed de Dias: %v", err)
 	}
 
 	var count int64
