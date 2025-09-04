@@ -49,6 +49,10 @@ func main() {
 
 		&models.Categoria{},
 		&models.SubCategoria{},
+
+		&models.Dia{},
+		&models.Salida{},
+		&models.VigenciaDiasConcurrentes{},
 	); err != nil {
 		log.Fatal("Error al migrar los modelos de la db:", err)
 	}

@@ -33,13 +33,10 @@ func CrearPaqueteTuristico(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var paqueteTuristico = models.PaqueteTuristico{
-		Categoria:   bodyStruct.Categoria,
 		Nombre:      bodyStruct.Nombre,
-		Fecha:       bodyStruct.Fecha,
 		Descripcion: bodyStruct.Descripcion,
 		Precio:      bodyStruct.Precio,
 		Duracion:    bodyStruct.Duracion,
-		Salida:      bodyStruct.Salida,
 		Estado:      bodyStruct.Estado,
 		IDAgencia:   bodyStruct.IDAgencia,
 	}
