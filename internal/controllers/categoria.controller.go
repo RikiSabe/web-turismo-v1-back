@@ -24,7 +24,7 @@ func ObtenerCategorias(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "applicacion/json")
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(categorias)
 }
 

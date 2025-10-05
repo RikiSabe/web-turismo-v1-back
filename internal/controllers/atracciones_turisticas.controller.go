@@ -43,6 +43,33 @@ func ObtenerAtraccionesTuristicas(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func ObtenerAtraccionesFotos(w http.ResponseWriter, r *http.Request) {
+	var atracciones []types.AtraccionesFotos
+
+	err := db.GDB.Raw(services.QueryAtraccionesFoto).Scan(&atracciones).Error
+	if err != nil {
+		http.Error(w, "Error en la consulta", http.StatusInternalServerError)
+		return
+	}
+
+	for i := range atracciones {
+		fotoBase64 := ""
+		if atracciones[i].Foto != "N/A" {
+			if encoded, err := encodeImageToBase64(atracciones[i].Foto); err == nil {
+				fotoBase64 = encoded
+			}
+		}
+		if fotoBase64 == "" {
+			fotoBase64 = "N/A"
+		}
+		atracciones[i].Foto = fotoBase64
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(&atracciones)
+
+}
+
 func ObtenerAtraccionTuristica(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
 
@@ -116,6 +143,29 @@ func AgregarAtraccionTuristica(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	subcatsStr := r.FormValue("subcategorias")
+	subcatsSlice := strings.Split(subcatsStr, ",")
+
+	for _, s := range subcatsSlice {
+		idSubcat, err := strconv.ParseUint(strings.TrimSpace(s), 10, 64)
+		if err != nil {
+			tx.Rollback()
+			http.Error(w, "subcategoría inválida: "+s, http.StatusBadRequest)
+			return
+		}
+
+		relacion := models.AtraccionesCategorias{
+			IDAtraccion:    nuevaAtraccion.ID,
+			IDSubCategoria: uint(idSubcat),
+		}
+
+		if err := tx.Create(&relacion).Error; err != nil {
+			tx.Rollback()
+			http.Error(w, "Error al guardar la relación atracción-subcategoría", http.StatusInternalServerError)
+			return
+		}
+	}
+
 	files := r.MultipartForm.File["fotos[]"]
 	for _, fileHeader := range files {
 		file, err := fileHeader.Open()
@@ -133,6 +183,7 @@ func AgregarAtraccionTuristica(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Error al procesar el orden de la foto", http.StatusBadRequest)
 			return
 		}
+
 		// Generar nombre único
 		nombreFoto := fmt.Sprintf("foto_atraccion_%s%s", uuid.New().String(), filepath.Ext(fileHeader.Filename))
 		rutaFoto := "internal/images/atracciones/" + nombreFoto

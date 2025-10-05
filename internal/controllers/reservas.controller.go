@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 	"web-turismo-v1/internal/db"
 	"web-turismo-v1/internal/models"
 	"web-turismo-v1/internal/services"
@@ -50,19 +51,41 @@ func ObtenerReserva(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(reserva)
 }
 
-func ObtenerReservasUsuario(w http.ResponseWriter, r *http.Request) {
-	idUsuario := mux.Vars(r)["id"]
-	var Reservas []types.ReservaTODO
+func ObtenerReservasPorUsuario(w http.ResponseWriter, r *http.Request) {
+	id_usuario := mux.Vars(r)["id"]
 
-	err := db.GDB.Raw(services.QueryReservasUsuarioTODO, idUsuario).Scan(&Reservas).Error
-	if err != nil {
-		http.Error(w, "Error al obtener reservas del usuario", http.StatusInternalServerError)
+	type PaqueteInfo struct {
+		Nombre      string `json:"nombre"`
+		Descripcion string `json:"descripcion"`
+	}
+
+	type ReservaDetalle struct {
+		ID             uint        `json:"id"`
+		Fecha          time.Time   `json:"fecha"`
+		Descripcion    string      `json:"descripcion"`
+		NumeroPersonas int         `json:"numero_personas"`
+		Estado         bool        `json:"estado"`
+		Paquete        PaqueteInfo `json:"paquete"`
+	}
+
+	var result struct {
+		Reservas json.RawMessage `gorm:"column:reservas"`
+	}
+
+	if err := db.GDB.Raw(services.QueryReservasByUsuario, id_usuario).Scan(&result).Error; err != nil {
+		http.Error(w, "Error al obtener las reservas", http.StatusInternalServerError)
+		return
+	}
+
+	var reservas []ReservaDetalle
+	if err := json.Unmarshal(result.Reservas, &reservas); err != nil {
+		http.Error(w, "Error al procesar las reservas", http.StatusInternalServerError)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	if err := json.NewEncoder(w).Encode(Reservas); err != nil {
+	if err := json.NewEncoder(w).Encode(reservas); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

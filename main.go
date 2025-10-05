@@ -23,7 +23,7 @@ func main() {
 		log.Printf("Error al conectarse a la base de datos: %v", err)
 	}
 
-	port := "5000"
+	port := "5750"
 
 	err = db.Connection()
 	if err != nil {
@@ -55,6 +55,8 @@ func main() {
 		&models.VigenciaDiasConcurrentes{},
 		&models.VigenciaRango{},
 		&models.VigenciaUnica{},
+
+		&models.AtraccionesCategorias{},
 	); err != nil {
 		log.Fatal("Error al migrar los modelos de la db:", err)
 	}

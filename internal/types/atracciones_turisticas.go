@@ -1,6 +1,8 @@
 package types
 
-import "gorm.io/datatypes"
+import (
+	"gorm.io/datatypes"
+)
 
 type Foto struct {
 	ID    uint   `json:"id"`
@@ -59,4 +61,11 @@ type UsuarioEncargado struct {
 	CI             string `json:"ci"`
 	Correo         string `json:"correo"`
 	Telefono       string `json:"telefono"`
+}
+
+type AtraccionesFotos struct {
+	Nombre      string `json:"nombre"`
+	Direccion   string `json:"direccion"`
+	Descripcion string `json:"descripcion"`
+	Foto        string `json:"foto"`
 }

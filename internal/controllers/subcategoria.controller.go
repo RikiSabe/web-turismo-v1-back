@@ -14,8 +14,8 @@ func ObtenerSubCategoriasPorCategoria(w http.ResponseWriter, r *http.Request) {
 	var subCategorias []models.SubCategoria
 
 	err := db.GDB.
-		Table("subcategoria").
-		Select("nombre, descripcion, estado").
+		Table("subcategorias").
+		Select("id_subcategoria, nombre, descripcion, estado").
 		Scan(&subCategorias).
 		Where("id_categoria = ?", id_categoria).
 		Error

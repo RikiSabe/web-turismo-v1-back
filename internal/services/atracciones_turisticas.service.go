@@ -110,3 +110,9 @@ var QueryEncargadoAtraccionTuristicas = `
   FROM "GestUsuarios" as u
   WHERE u.id_usuario = ?
   limit 1;`
+
+var QueryAtraccionesFoto = `
+  select 
+  atr.id_atraccion as id, atr.nombre, atr.direccion, atr.descripcion, fa.foto 
+  from "GestAtraccionesTuristicas" as atr 
+  join fotos_atracciones fa on atr.id_atraccion = fa.id_atraccion AND fa.orden = 1;`
