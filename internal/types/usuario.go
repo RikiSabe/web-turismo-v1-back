@@ -35,3 +35,25 @@ type UsuarioMenu struct {
 	NombreCompleto string `json:"nombre_completo"`
 	Foto           string `json:"foto"`
 }
+
+type UsuarioDatosPersonales struct {
+	Nombre          string    `json:"nombre"`
+	ApellidoPaterno string    `json:"apellido_paterno"`
+	ApellidoMaterno string    `json:"apellido_materno"`
+	Telefono        string    `json:"telefono"`
+	FechaNacimiento time.Time `json:"fecha_nacimiento"`
+	IdUbicacion     uint      `json:"id_ubicacion"`
+	IdDepartamento  uint      `json:"id_departamento"`
+}
+
+type UsuarioDatosPrivados struct {
+	Rol    string `json:"rol"`
+	CI     string `json:"ci"`
+	Correo string `json:"correo"`
+	Contra string `json:"contra"`
+	Estado bool   `json:"estado"`
+}
+
+type UsuarioFoto struct {
+	Foto string `json:"foto"`
+}

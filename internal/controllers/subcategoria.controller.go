@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"web-turismo-v1/internal/db"
 	"web-turismo-v1/internal/models"
@@ -14,15 +15,19 @@ func ObtenerSubCategoriasPorCategoria(w http.ResponseWriter, r *http.Request) {
 	var subCategorias []models.SubCategoria
 
 	err := db.GDB.
-		Table("subcategorias").
-		Select("id_subcategoria, nombre, descripcion, estado").
+		Table("subcategorias s").
+		Select("s.id_subcategoria, s.nombre, s.descripcion, s.estado").
+		Where("s.id_categoria = ?", id_categoria).
 		Scan(&subCategorias).
-		Where("id_categoria = ?", id_categoria).
 		Error
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
+	}
+
+	if b, err := json.MarshalIndent(subCategorias, " ", "  "); err == nil {
+		fmt.Println(string(b))
 	}
 
 	w.Header().Set("Content-Type", "application/json")

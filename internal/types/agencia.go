@@ -25,3 +25,18 @@ type AgenciaUnique struct {
 	IdDepartamento uint                       `json:"id_departamento"`
 	Fotos          datatypes.JSONType[[]Foto] `json:"fotos"`
 }
+
+type AgenciaDatosGenerales struct {
+	Nombre         string `json:"nombre"`
+	Telefono       string `json:"telefono"`
+	Correo         string `json:"correo"`
+	IdEncargado    uint   `json:"id_encargado"`
+	Descripcion    string `json:"descripcion"`
+	IdDepartamento uint   `json:"id_departamento"`
+	Direccion      string `json:"direccion"`
+	Estado         bool   `json:"estado"`
+}
+
+type AgenciaFotos struct {
+	Fotos datatypes.JSONType[[]Foto] `json:"fotos"`
+}

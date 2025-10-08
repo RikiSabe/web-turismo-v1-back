@@ -273,3 +273,103 @@ func ModificarAgencia(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(agencia)
 }
+
+// Steps
+func ObtenerAgenciaDatosGenerales(w http.ResponseWriter, r *http.Request) {
+	id_agencia := mux.Vars(r)["id"]
+	var datosGenerales types.AgenciaDatosGenerales
+
+	query := `
+		SELECT 
+			nombre,
+			telefono,
+			correo,
+			id_encargado,
+			descripcion,
+			id_departamento,
+			direccion,
+			estado
+		FROM "GestAgencias"
+		WHERE id_agencia = $1`
+
+	if err := db.GDB.Raw(query, id_agencia).Scan(&datosGenerales).Error; err != nil {
+		http.Error(w, "Error al obtener datos generales de la agencia", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(datosGenerales)
+}
+
+func ObtenerAgenciaFotos(w http.ResponseWriter, r *http.Request) {
+	id_agencia := mux.Vars(r)["id"]
+	var fotos []types.Foto
+
+	query := `
+		SELECT 
+			id_foto as id,
+			foto,
+			orden
+		FROM fotos_agencias
+		WHERE id_agencia = $1
+		ORDER BY orden ASC`
+
+	if err := db.GDB.Raw(query, id_agencia).Scan(&fotos).Error; err != nil {
+		http.Error(w, "Error al obtener fotos de la agencia", http.StatusInternalServerError)
+		return
+	}
+
+	for i, foto := range fotos {
+		base64img, err := encodeImageToBase64(foto.Foto)
+		if err != nil {
+			fmt.Printf("Error codificando una foto")
+
+		}
+		fotos[i].Foto = base64img
+	}
+
+	agenciaFotos := types.AgenciaFotos{
+		Fotos: datatypes.NewJSONType(fotos),
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(agenciaFotos)
+}
+
+// Mod Steps
+func ModificarAgenciaDatosGenerales(w http.ResponseWriter, r *http.Request) {
+	id_agencia := mux.Vars(r)["id"]
+
+	var agenciaExistente models.Agencia
+	err := db.GDB.
+		Where("id_agencia = ?", id_agencia).
+		First(&agenciaExistente).
+		Error
+	if err != nil {
+		http.Error(w, "Agencia no encontrada", http.StatusNotFound)
+		return
+	}
+
+	var nuevosDatos types.AgenciaDatosGenerales
+	if err := json.NewDecoder(r.Body).Decode(&nuevosDatos); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	agenciaExistente.Nombre = nuevosDatos.Nombre
+	agenciaExistente.Telefono = nuevosDatos.Telefono
+	agenciaExistente.Correo = nuevosDatos.Correo
+	agenciaExistente.IdEncargado = nuevosDatos.IdEncargado
+	agenciaExistente.Descripcion = nuevosDatos.Descripcion
+	agenciaExistente.IdDepartamento = nuevosDatos.IdDepartamento
+	agenciaExistente.Direccion = nuevosDatos.Direccion
+	agenciaExistente.Estado = nuevosDatos.Estado
+
+	if err := db.GDB.Save(&agenciaExistente).Error; err != nil {
+		http.Error(w, "Error al modificar datos generales de la agencia", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(agenciaExistente)
+}

@@ -273,3 +273,153 @@ func ModificarUsuario(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(usuario)
 }
+
+// Steps
+func ObtenerUsuarioDatosPersonales(w http.ResponseWriter, r *http.Request) {
+	id_usuario := mux.Vars(r)["id"]
+
+	var datosPersonales types.UsuarioDatosPersonales
+
+	query := `
+			SELECT 
+				u.nombre,
+				u.apellido_paterno,
+				u.apellido_materno,
+				u.telefono,
+				u.fecha_nacimiento,
+				u.id_ubicacion,
+				p.id_departamento
+			FROM "GestUsuarios" u
+			LEFT JOIN provincias p ON u.id_ubicacion = p.id_provincia
+			WHERE u.id_usuario = $1 AND u.estado = true`
+
+	if err := db.GDB.Raw(query, id_usuario).Scan(&datosPersonales).Error; err != nil {
+		http.Error(w, "Error al obtener datos personales del usuario", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(datosPersonales)
+}
+
+func ObtenerUsuarioDatosPrivados(w http.ResponseWriter, r *http.Request) {
+	id_usuario := mux.Vars(r)["id"]
+	var datosPrivados types.UsuarioDatosPrivados
+
+	query := `
+		SELECT 
+			rol,
+			ci,
+			correo,
+			contra,
+			estado
+		FROM "GestUsuarios"
+		WHERE id_usuario = $1`
+
+	if err := db.GDB.Raw(query, id_usuario).Scan(&datosPrivados).Error; err != nil {
+		http.Error(w, "Error al obtener datos privados del usuario", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(datosPrivados)
+}
+
+func ObtenerUsuarioFoto(w http.ResponseWriter, r *http.Request) {
+	id_usuario := mux.Vars(r)["id"]
+	var usuarioFoto types.UsuarioFoto
+
+	query := `
+			SELECT foto
+			FROM "GestUsuarios"
+			WHERE id_usuario = $1`
+
+	if err := db.GDB.Raw(query, id_usuario).Scan(&usuarioFoto).Error; err != nil {
+		http.Error(w, "Error al obtener foto del usuario", http.StatusInternalServerError)
+		return
+	}
+
+	fotoBase64 := ""
+	if usuarioFoto.Foto != "N/A" {
+		if encoded, err := encodeImageToBase64(usuarioFoto.Foto); err == nil {
+			fotoBase64 = encoded
+		}
+	}
+	if fotoBase64 == "" {
+		fotoBase64 = "N/A"
+	}
+	usuarioFoto.Foto = fotoBase64
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(usuarioFoto)
+}
+
+// Mod Steps
+func ModificarUsuarioDatosPersonales(w http.ResponseWriter, r *http.Request) {
+	id_usuario := mux.Vars(r)["id"]
+
+	var usuarioExistente models.Usuario
+	err := db.GDB.
+		Where("id_usuario = ?", id_usuario).
+		First(&usuarioExistente).
+		Error
+	if err != nil {
+		http.Error(w, "Usuario no encontrado", http.StatusNotFound)
+		return
+	}
+
+	var nuevosDatos types.UsuarioDatosPersonales
+	if err := json.NewDecoder(r.Body).Decode(&nuevosDatos); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	usuarioExistente.Nombre = nuevosDatos.Nombre
+	usuarioExistente.ApellidoPaterno = nuevosDatos.ApellidoPaterno
+	usuarioExistente.ApellidoMaterno = nuevosDatos.ApellidoMaterno
+	usuarioExistente.Telefono = nuevosDatos.Telefono
+	usuarioExistente.FechaNacimiento = nuevosDatos.FechaNacimiento
+	usuarioExistente.IdUbicacion = nuevosDatos.IdUbicacion
+
+	if err := db.GDB.Save(&usuarioExistente).Error; err != nil {
+		http.Error(w, "Error al modificar datos personales del usuario", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(usuarioExistente)
+}
+
+func ModificarUsuarioDatosPrivados(w http.ResponseWriter, r *http.Request) {
+	id_usuario := mux.Vars(r)["id"]
+
+	var usuarioExistente models.Usuario
+	err := db.GDB.
+		Where("id_usuario = ?", id_usuario).
+		First(&usuarioExistente).
+		Error
+	if err != nil {
+		http.Error(w, "Usuario no encontrado", http.StatusNotFound)
+		return
+	}
+
+	var nuevosDatos types.UsuarioDatosPrivados
+	if err := json.NewDecoder(r.Body).Decode(&nuevosDatos); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	usuarioExistente.Rol = nuevosDatos.Rol
+	usuarioExistente.CI = nuevosDatos.CI
+	usuarioExistente.Correo = nuevosDatos.Correo
+	usuarioExistente.Contra = nuevosDatos.Contra
+	usuarioExistente.Estado = nuevosDatos.Estado
+
+	if err := db.GDB.Save(&usuarioExistente).Error; err != nil {
+		http.Error(w, "Error al modificar datos privados del usuario", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(usuarioExistente)
+}

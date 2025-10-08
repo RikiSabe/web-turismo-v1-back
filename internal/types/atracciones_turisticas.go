@@ -69,3 +69,24 @@ type AtraccionesFotos struct {
 	Descripcion string `json:"descripcion"`
 	Foto        string `json:"foto"`
 }
+
+type AtraccionDatosGenerales struct {
+	Nombre         string `json:"nombre"`
+	IDEncargado    uint   `json:"id_encargado"`
+	Direccion      string `json:"direccion"`
+	IDUbicacion    uint   `json:"id_ubicacion"`
+	IDDepartamento uint   `json:"id_departamento"`
+	Descripcion    string `json:"descripcion"`
+}
+
+type AtraccionDatoEspecificos struct {
+	HorarioApertura string                             `json:"horario_apertura"`
+	HorarioCierre   string                             `json:"horario_cierre"`
+	Precio          float64                            `json:"precio"`
+	Estado          bool                               `json:"estado"`
+	Categorias      datatypes.JSONType[[]SubCategoria] `json:"subcategorias"`
+}
+
+type AtraccionFotos struct {
+	Fotos datatypes.JSONType[[]Foto] `json:"fotos"`
+}

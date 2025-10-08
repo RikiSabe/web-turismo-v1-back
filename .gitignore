@@ -12,3 +12,7 @@ internal/images/usuarios/*
 #files on images/atracciones
 internal/images/atracciones/*
 !internal/images/atracciones/
+
+#file on images/agencias
+internal/images/agencias/*
+!internal/images/agencias/

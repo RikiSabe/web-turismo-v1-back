@@ -57,6 +57,7 @@ func main() {
 		&models.VigenciaUnica{},
 
 		&models.AtraccionesCategorias{},
+		&models.EncargadoQR{},
 	); err != nil {
 		log.Fatal("Error al migrar los modelos de la db:", err)
 	}

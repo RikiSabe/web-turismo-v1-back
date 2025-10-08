@@ -104,6 +104,7 @@ func HacerReserva(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	fmt.Println(string(b))
+	reserva.Estado = false
 
 	tx := db.GDB.Begin()
 	if err := tx.Create(&reserva).Error; err != nil {

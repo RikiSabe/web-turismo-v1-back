@@ -342,3 +342,214 @@ func ObtenerEncargadoAtraccionTuristica(w http.ResponseWriter, r *http.Request) 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(&usuario)
 }
+
+// Steps
+func ObtenerAtraccionDatosGenerales(w http.ResponseWriter, r *http.Request) {
+	id_atraccion := mux.Vars(r)["id"]
+
+	var datosGenerales types.AtraccionDatosGenerales
+
+	query := `
+		SELECT 
+			gat.nombre,
+			gat.id_encargado,
+			gat.direccion,
+			gat.descripcion,
+			gat.id_ubicacion,
+			p.id_departamento
+		FROM "GestAtraccionesTuristicas" gat
+		LEFT JOIN provincias p ON gat.id_ubicacion = p.id_provincia
+		WHERE id_atraccion = $1`
+
+	if err := db.GDB.Raw(query, id_atraccion).Scan(&datosGenerales).Error; err != nil {
+		http.Error(w, "Error al obtener datos generales de la atracción", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(datosGenerales)
+}
+
+func ObtenerAtraccionDatosEspecificos(w http.ResponseWriter, r *http.Request) {
+	id_atraccion := mux.Vars(r)["id"]
+
+	var datosEspecificos struct {
+		HorarioApertura string  `json:"horario_apertura"`
+		HorarioCierre   string  `json:"horario_cierre"`
+		Precio          float64 `json:"precio"`
+		Estado          bool    `json:"estado"`
+	}
+
+	query := `
+		SELECT 
+			horario_apertura,
+			horario_cierre,
+			precio,
+			estado
+		FROM "GestAtraccionesTuristicas"
+		WHERE id_atraccion = $1`
+
+	if err := db.GDB.Raw(query, id_atraccion).Scan(&datosEspecificos).Error; err != nil {
+		http.Error(w, "Error al obtener datos específicos de la atracción", http.StatusInternalServerError)
+		return
+	}
+
+	// Obtener subcategorías
+	var subcategorias []types.SubCategoria
+
+	querySubcategorias := `
+		SELECT 
+			s.id_subcategoria as id,
+			s.nombre,
+			s.descripcion
+		FROM subcategorias s
+		INNER JOIN atracciones_categorias ac ON s.id_subcategoria = ac.id_subcategoria
+		WHERE ac.id_atraccion = $1 AND s.estado = true
+		ORDER BY s.nombre ASC`
+
+	if err := db.GDB.Raw(querySubcategorias, id_atraccion).Scan(&subcategorias).Error; err != nil {
+		http.Error(w, "Error al obtener subcategorías de la atracción", http.StatusInternalServerError)
+		return
+	}
+
+	resultado := types.AtraccionDatoEspecificos{
+		HorarioApertura: datosEspecificos.HorarioApertura,
+		HorarioCierre:   datosEspecificos.HorarioCierre,
+		Precio:          datosEspecificos.Precio,
+		Estado:          datosEspecificos.Estado,
+		Categorias:      datatypes.NewJSONType(subcategorias),
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(resultado)
+}
+
+func ObtenerAtraccionFotos(w http.ResponseWriter, r *http.Request) {
+	id_atraccion := mux.Vars(r)["id"]
+
+	var fotos []types.Foto
+
+	query := `
+		SELECT 
+			id_foto as id,
+			foto,
+			orden
+		FROM fotos_atracciones
+		WHERE id_atraccion = $1
+		ORDER BY orden ASC`
+
+	if err := db.GDB.Raw(query, id_atraccion).Scan(&fotos).Error; err != nil {
+		http.Error(w, "Error al obtener fotos de la atracción", http.StatusInternalServerError)
+		return
+	}
+
+	for i, foto := range fotos {
+		base64img, err := encodeImageToBase64(foto.Foto)
+		if err != nil {
+			fmt.Printf("Error codificando una foto")
+
+		}
+		fotos[i].Foto = base64img
+	}
+
+	atraccionFotos := types.AtraccionFotos{
+		Fotos: datatypes.NewJSONType(fotos),
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(atraccionFotos)
+}
+
+// Mod Steps
+func ModificarAtraccionDatosGenerales(w http.ResponseWriter, r *http.Request) {
+	id_atraccion := mux.Vars(r)["id"]
+
+	var atraccionExistente models.AtraccionTuristica
+	err := db.GDB.
+		Where("id_atraccion = ?", id_atraccion).
+		First(&atraccionExistente).
+		Error
+	if err != nil {
+		http.Error(w, "Atracción no encontrada", http.StatusNotFound)
+		return
+	}
+
+	var nuevosDatos types.AtraccionDatosGenerales
+	if err := json.NewDecoder(r.Body).Decode(&nuevosDatos); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	atraccionExistente.Nombre = nuevosDatos.Nombre
+	atraccionExistente.IdEncargado = nuevosDatos.IDEncargado
+	atraccionExistente.Direccion = nuevosDatos.Direccion
+	atraccionExistente.IdUbicacion = nuevosDatos.IDUbicacion
+	atraccionExistente.Descripcion = nuevosDatos.Descripcion
+
+	if err := db.GDB.Save(&atraccionExistente).Error; err != nil {
+		http.Error(w, "Error al modificar datos generales de la atracción", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(atraccionExistente)
+}
+
+func ModificarAtraccionDatosEspecificos(w http.ResponseWriter, r *http.Request) {
+	id_atraccion := mux.Vars(r)["id"]
+
+	var atraccionExistente models.AtraccionTuristica
+	err := db.GDB.
+		Where("id_atraccion = ?", id_atraccion).
+		First(&atraccionExistente).
+		Error
+	if err != nil {
+		http.Error(w, "Atracción no encontrada", http.StatusNotFound)
+		return
+	}
+
+	var nuevosDatos struct {
+		HorarioApertura string                                   `json:"horario_apertura"`
+		HorarioCierre   string                                   `json:"horario_cierre"`
+		Precio          float64                                  `json:"precio"`
+		Estado          bool                                     `json:"estado"`
+		Categorias      datatypes.JSONType[[]types.SubCategoria] `json:"subcategorias"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&nuevosDatos); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	atraccionExistente.HorarioApertura = nuevosDatos.HorarioApertura
+	atraccionExistente.HorarioCierre = nuevosDatos.HorarioCierre
+	atraccionExistente.Precio = nuevosDatos.Precio
+	atraccionExistente.Estado = nuevosDatos.Estado
+
+	if err := db.GDB.Save(&atraccionExistente).Error; err != nil {
+		http.Error(w, "Error al modificar datos específicos de la atracción", http.StatusInternalServerError)
+		return
+	}
+
+	// Actualizar subcategorías
+	// Primero eliminar las relaciones existentes
+	if err := db.GDB.Exec("DELETE FROM atracciones_categorias WHERE id_atraccion = ?", id_atraccion).Error; err != nil {
+		http.Error(w, "Error al actualizar subcategorías", http.StatusInternalServerError)
+		return
+	}
+
+	// Insertar las nuevas relaciones
+	subcategorias := nuevosDatos.Categorias.Data()
+	for _, subcat := range subcategorias {
+		nuevaRelacion := models.AtraccionesCategorias{
+			IDAtraccion:    atraccionExistente.ID,
+			IDSubCategoria: subcat.ID,
+		}
+		if err := db.GDB.Create(&nuevaRelacion).Error; err != nil {
+			http.Error(w, "Error al crear relaciones de subcategorías", http.StatusInternalServerError)
+			return
+		}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(atraccionExistente)
+}
