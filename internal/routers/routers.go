@@ -50,6 +50,7 @@ func endPointsAPI(api *mux.Router) {
 
 	// Auth
 	v1.HandleFunc("/loginweb", c.Auth.AuthLoginWeb).Methods(http.MethodPost)
+	v1.HandleFunc("/registro", c.Auth.AuthRegisterWeb).Methods(http.MethodPost)
 
 	// Atracciones turisticas
 	v2AtraccionesTuristicas.HandleFunc("/encargado/{id}", c.ObtenerEncargadoAtraccionTuristica).Methods(http.MethodGet)
@@ -124,4 +125,5 @@ func endPointsAPI(api *mux.Router) {
 	v1Pagos.HandleFunc("/comprobante/{id_usuario}/{id_reserva}", c.EnviarComprobantePago).Methods(http.MethodPost)
 	v1Pagos.HandleFunc("/{id}", c.ReservasPagoUsuario).Methods(http.MethodGet)
 	v1Pagos.HandleFunc("", c.ObtenerReservasPago).Methods(http.MethodGet)
+	v1Pagos.HandleFunc("/comprobante/{id_usuario}/{id_reserva}", c.ObtenerDetallesComprobante).Methods(http.MethodGet)
 }

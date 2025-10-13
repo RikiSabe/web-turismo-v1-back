@@ -48,3 +48,7 @@ func (auth) AuthLoginWeb(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+
+func (auth) AuthRegisterWeb(w http.ResponseWriter, r *http.Request) {
+
+}
