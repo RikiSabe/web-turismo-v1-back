@@ -121,6 +121,7 @@ func endPointsAPI(api *mux.Router) {
 	v1Encargado.HandleFunc("/{id}", c.ObtenerQR).Methods(http.MethodGet)
 
 	// Pagos
-	v1Pagos.HandleFunc("", c.ObtenerReservasPago).Methods(http.MethodGet)
+	v1Pagos.HandleFunc("/comprobante/{id_usuario}/{id_reserva}", c.EnviarComprobantePago).Methods(http.MethodPost)
 	v1Pagos.HandleFunc("/{id}", c.ReservasPagoUsuario).Methods(http.MethodGet)
+	v1Pagos.HandleFunc("", c.ObtenerReservasPago).Methods(http.MethodGet)
 }

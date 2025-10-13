@@ -2,10 +2,16 @@ package controllers
 
 import (
 	"encoding/json"
+	"fmt"
+	"io"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
 	"web-turismo-v1/internal/db"
+	"web-turismo-v1/internal/models"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 )
 
@@ -225,4 +231,72 @@ func ReservasPagoUsuario(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(reservas)
+}
+
+func EnviarComprobantePago(w http.ResponseWriter, r *http.Request) {
+	id_reserva := mux.Vars(r)["id_reserva"]
+	id_usuario := mux.Vars(r)["id_usuario"]
+
+	err := r.ParseMultipartForm(10 << 20) // 10 MB
+	if err != nil {
+		http.Error(w, "Error al parsear el formulario", http.StatusInternalServerError)
+		return
+	}
+
+	direccionCoprobante := "N/A"
+
+	file, handler, err := r.FormFile("comprobante")
+	if err == nil {
+		defer file.Close()
+
+		nombreComprobante := fmt.Sprintf("foto_comprobante_%s%s", uuid.New().String(), filepath.Ext(handler.Filename))
+
+		rutaFoto := "internal/images/comprobantes/" + nombreComprobante
+		outFile, err := os.Create(rutaFoto)
+		if err != nil {
+			http.Error(w, "Error al guardar la foto", http.StatusInternalServerError)
+			return
+		}
+		defer outFile.Close()
+
+		_, err = io.Copy(outFile, file)
+		if err != nil {
+			http.Error(w, "Error al escribir la foto", http.StatusInternalServerError)
+			return
+		}
+
+		direccionCoprobante = rutaFoto
+	} else if err != http.ErrMissingFile {
+		http.Error(w, "Error al obtener la foto: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	idReserva, err := strconv.ParseUint(id_reserva, 10, 64)
+	if err != nil {
+		http.Error(w, "id_reserva inválido", http.StatusBadRequest)
+		return
+	}
+
+	idUsuario, err := strconv.ParseUint(id_usuario, 10, 64)
+	if err != nil {
+		http.Error(w, "id_usuario inválido", http.StatusBadRequest)
+		return
+	}
+
+	newComprobante := models.Comprobante{
+		IDReserva: uint(idReserva),
+		IDUsuario: uint(idUsuario),
+		Foto:      direccionCoprobante,
+	}
+
+	tx := db.GDB.Begin()
+	if err := tx.Create(&newComprobante).Error; err != nil {
+		tx.Rollback()
+		http.Error(w, "Error al guardar el comprobante", http.StatusInternalServerError)
+		return
+	}
+	tx.Commit()
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"message": "Comprobante enviado correctamente"})
 }
