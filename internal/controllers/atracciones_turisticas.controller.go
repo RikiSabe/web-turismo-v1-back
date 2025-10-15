@@ -553,3 +553,98 @@ func ModificarAtraccionDatosEspecificos(w http.ResponseWriter, r *http.Request) 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(atraccionExistente)
 }
+
+func ModificarAtraccionFotos(w http.ResponseWriter, r *http.Request) {
+	id_atraccion := mux.Vars(r)["id"]
+
+	err := r.ParseMultipartForm(50 << 20) // 50 MB
+	if err != nil {
+		http.Error(w, "Error al parsear el formulario: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	var atraccionExistente models.AtraccionTuristica
+	if err := db.GDB.Where("id_atraccion = ?", id_atraccion).First(&atraccionExistente).Error; err != nil {
+		http.Error(w, "Atracción no encontrada", http.StatusNotFound)
+		return
+	}
+
+	files := r.MultipartForm.File["fotos[]"]
+	if len(files) == 0 {
+		http.Error(w, "No se recibieron fotos", http.StatusBadRequest)
+		return
+	}
+
+	tx := db.GDB.Begin()
+
+	var fotosAnteriores []models.FotosAtracciones
+	if err := tx.Where("id_atraccion = ?", id_atraccion).Find(&fotosAnteriores).Error; err != nil {
+		tx.Rollback()
+		http.Error(w, "Error al obtener fotos anteriores", http.StatusInternalServerError)
+		return
+	}
+
+	for _, foto := range fotosAnteriores {
+		if foto.Foto != "" && foto.Foto != "N/A" {
+			_ = os.Remove(foto.Foto) // Ignorar error si no existe
+		}
+	}
+
+	if err := tx.Where("id_atraccion = ?", id_atraccion).Delete(&models.FotosAtracciones{}).Error; err != nil {
+		tx.Rollback()
+		http.Error(w, "Error al eliminar fotos anteriores", http.StatusInternalServerError)
+		return
+	}
+
+	for _, fileHeader := range files {
+		file, err := fileHeader.Open()
+		if err != nil {
+			tx.Rollback()
+			http.Error(w, "Error al abrir una foto: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+		defer file.Close()
+
+		ext := filepath.Ext(fileHeader.Filename)
+		OrdenFoto, err := strconv.Atoi(strings.TrimSuffix(fileHeader.Filename, ext))
+		if err != nil {
+			tx.Rollback()
+			http.Error(w, "Error al procesar el orden de la foto", http.StatusBadRequest)
+			return
+		}
+
+		nombreFoto := fmt.Sprintf("foto_atraccion_%s%s", uuid.New().String(), ext)
+		rutaFoto := "internal/images/atracciones/" + nombreFoto
+
+		outFile, err := os.Create(rutaFoto)
+		if err != nil {
+			tx.Rollback()
+			http.Error(w, "Error al guardar la foto en disco", http.StatusInternalServerError)
+			return
+		}
+		defer outFile.Close()
+
+		if _, err := io.Copy(outFile, file); err != nil {
+			tx.Rollback()
+			http.Error(w, "Error al escribir la foto", http.StatusInternalServerError)
+			return
+		}
+
+		foto := models.FotosAtracciones{
+			IdAtraccion: atraccionExistente.ID,
+			Foto:        rutaFoto,
+			Orden:       uint(OrdenFoto),
+		}
+
+		if err := tx.Create(&foto).Error; err != nil {
+			tx.Rollback()
+			http.Error(w, "Error al guardar la foto en base de datos", http.StatusInternalServerError)
+			return
+		}
+	}
+
+	tx.Commit()
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"message": "Fotos actualizadas exitosamente"})
+}

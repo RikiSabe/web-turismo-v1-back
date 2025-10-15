@@ -60,6 +60,7 @@ func endPointsAPI(api *mux.Router) {
 	v2AtraccionesTuristicas.HandleFunc("/datos-especificos/{id}", c.ObtenerAtraccionDatosEspecificos).Methods(http.MethodGet)
 	v2AtraccionesTuristicas.HandleFunc("/datos-especificos/{id}", c.ModificarAtraccionDatosEspecificos).Methods(http.MethodPut)
 	v2AtraccionesTuristicas.HandleFunc("/fotos/{id}", c.ObtenerAtraccionFotos).Methods(http.MethodGet)
+	v2AtraccionesTuristicas.HandleFunc("/fotos/{id}", c.ModificarAtraccionFotos).Methods(http.MethodPut)
 	v2AtraccionesTuristicas.HandleFunc("/{id}", c.ObtenerAtraccionTuristica).Methods(http.MethodGet)
 	v2AtraccionesTuristicas.HandleFunc("/{id}", c.ModificarAtraccionTuristica).Methods(http.MethodPut)
 	v2AtraccionesTuristicas.HandleFunc("", c.ObtenerAtraccionesTuristicas).Methods(http.MethodGet)
@@ -71,6 +72,7 @@ func endPointsAPI(api *mux.Router) {
 	v1Agencias.HandleFunc("/datos-generales/{id}", c.ObtenerAgenciaDatosGenerales).Methods(http.MethodGet)
 	v1Agencias.HandleFunc("/datos-generales/{id}", c.ModificarAgenciaDatosGenerales).Methods(http.MethodPut)
 	v1Agencias.HandleFunc("/fotos/{id}", c.ObtenerAgenciaFotos).Methods(http.MethodGet)
+	v1Agencias.HandleFunc("/fotos/{id}", c.ModificarAgenciaFotos).Methods(http.MethodPut)
 	v1Agencias.HandleFunc("", c.ObtenerAgencias).Methods(http.MethodGet)
 	v1Agencias.HandleFunc("", c.AgregarAgencia).Methods(http.MethodPost)
 
@@ -81,6 +83,7 @@ func endPointsAPI(api *mux.Router) {
 	v1Usuarios.HandleFunc("/datos-privados/{id}", c.ObtenerUsuarioDatosPrivados).Methods(http.MethodGet)
 	v1Usuarios.HandleFunc("/datos-privados/{id}", c.ModificarUsuarioDatosPrivados).Methods(http.MethodPut)
 	v1Usuarios.HandleFunc("/foto/{id}", c.ObtenerUsuarioFoto).Methods(http.MethodGet)
+	v1Usuarios.HandleFunc("/foto/{id}", c.ModificarUsuarioFoto).Methods(http.MethodPut)
 	v2Usuarios.HandleFunc("/{id}", c.ObtenerUsuario).Methods(http.MethodGet)
 	v2Usuarios.HandleFunc("/{id}", c.ModificarUsuario).Methods(http.MethodPut)
 	v1Usuarios.HandleFunc("", c.ObtenerUsuarios).Methods(http.MethodGet)

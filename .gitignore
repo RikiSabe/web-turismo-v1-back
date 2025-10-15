@@ -16,3 +16,6 @@ internal/images/atracciones/*
 #file on images/agencias
 internal/images/agencias/*
 !internal/images/agencias/
+
+#compilated
+main.exe

@@ -16,6 +16,7 @@ import (
 	"web-turismo-v1/internal/services"
 	"web-turismo-v1/internal/types"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 )
 
@@ -422,4 +423,60 @@ func ModificarUsuarioDatosPrivados(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(usuarioExistente)
+}
+
+func ModificarUsuarioFoto(w http.ResponseWriter, r *http.Request) {
+	id_usuario := mux.Vars(r)["id"]
+
+	var usuarioExistente models.Usuario
+	err := db.GDB.Where("id_usuario = ?", id_usuario).First(&usuarioExistente).Error
+	if err != nil {
+		http.Error(w, "Usuario no encontrado", http.StatusNotFound)
+		return
+	}
+
+	err = r.ParseMultipartForm(10 << 20) // 10 MB
+	if err != nil {
+		http.Error(w, "Error al parsear el formulario: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	file, handler, err := r.FormFile("foto")
+	if err != nil {
+		if err == http.ErrMissingFile {
+			http.Error(w, "No se recibió ninguna foto", http.StatusBadRequest)
+		} else {
+			http.Error(w, "Error al obtener la foto: "+err.Error(), http.StatusInternalServerError)
+		}
+		return
+	}
+	defer file.Close()
+
+	if usuarioExistente.Foto != "" && usuarioExistente.Foto != "N/A" {
+		_ = os.Remove(usuarioExistente.Foto) // Ignorar error si no existe
+	}
+
+	nombreFoto := fmt.Sprintf("foto_usuario_%s%s", uuid.New().String(), filepath.Ext(handler.Filename))
+	rutaFoto := "internal/images/usuarios/" + nombreFoto
+
+	outFile, err := os.Create(rutaFoto)
+	if err != nil {
+		http.Error(w, "Error al guardar la foto en disco", http.StatusInternalServerError)
+		return
+	}
+	defer outFile.Close()
+
+	if _, err := io.Copy(outFile, file); err != nil {
+		http.Error(w, "Error al escribir la foto", http.StatusInternalServerError)
+		return
+	}
+
+	usuarioExistente.Foto = rutaFoto
+	if err := db.GDB.Save(&usuarioExistente).Error; err != nil {
+		http.Error(w, "Error al actualizar la foto del usuario", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"message": "Foto actualizada exitosamente", "foto": rutaFoto})
 }
