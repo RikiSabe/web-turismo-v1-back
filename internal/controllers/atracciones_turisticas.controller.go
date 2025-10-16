@@ -166,6 +166,13 @@ func AgregarAtraccionTuristica(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	outputDir := "internal/images/atracciones"
+	if err := os.MkdirAll(outputDir, os.ModePerm); err != nil {
+		tx.Rollback()
+		http.Error(w, "Error al crear la carpeta de imágenes", http.StatusInternalServerError)
+		return
+	}
+
 	files := r.MultipartForm.File["fotos[]"]
 	for _, fileHeader := range files {
 		file, err := fileHeader.Open()

@@ -245,6 +245,12 @@ func EnviarComprobantePago(w http.ResponseWriter, r *http.Request) {
 
 	direccionCoprobante := "N/A"
 
+	outputDir := "internal/images/comprobantes"
+	if err := os.MkdirAll(outputDir, os.ModePerm); err != nil {
+		http.Error(w, "Error al crear la carpeta de imágenes", http.StatusInternalServerError)
+		return
+	}
+
 	file, handler, err := r.FormFile("comprobante")
 	if err == nil {
 		defer file.Close()

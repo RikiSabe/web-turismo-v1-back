@@ -32,6 +32,12 @@ func AsignarQR(w http.ResponseWriter, r *http.Request) {
 
 	direccionFoto := "N/A"
 
+	outputDir := "internal/images/qr"
+	if err := os.MkdirAll(outputDir, os.ModePerm); err != nil {
+		http.Error(w, "Error al crear la carpeta de imágenes", http.StatusInternalServerError)
+		return
+	}
+
 	file, handler, err := r.FormFile("QR")
 	if err == nil {
 		defer file.Close()

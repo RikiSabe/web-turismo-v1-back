@@ -111,6 +111,14 @@ func AgregarAgencia(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error al guardar la agencia", http.StatusInternalServerError)
 		return
 	}
+
+	outputDir := "internal/images/agencias"
+	if err := os.MkdirAll(outputDir, os.ModePerm); err != nil {
+		tx.Rollback()
+		http.Error(w, "Error al crear la carpeta de imágenes", http.StatusInternalServerError)
+		return
+	}
+
 	files := r.MultipartForm.File["fotos[]"]
 	for _, fileHeader := range files {
 		file, err := fileHeader.Open()
