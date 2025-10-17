@@ -4,8 +4,11 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 	"web-turismo-v1/internal/db"
+	"web-turismo-v1/internal/models"
 	"web-turismo-v1/internal/routers"
+	"web-turismo-v1/internal/seed"
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
@@ -27,7 +30,75 @@ func main() {
 		return
 	}
 
-	// migración y seed de datos
+	if err := db.GDB.AutoMigrate(
+		/* migraciones */
+		&models.Usuario{},
+		&models.Agencia{},
+		&models.AtraccionTuristica{},
+
+		&models.PaqueteTuristico{},
+		&models.PaqueteAtraccion{},
+		&models.Reservas{},
+
+		&models.Departamento{},
+		&models.Provincia{},
+
+		&models.FotosAgencia{},
+		&models.FotosAtracciones{},
+
+		&models.Categoria{},
+		&models.SubCategoria{},
+
+		&models.Dia{},
+		&models.Salida{},
+		&models.VigenciaDiasConcurrentes{},
+		&models.VigenciaRango{},
+		&models.VigenciaUnica{},
+
+		&models.AtraccionesCategorias{},
+		&models.EncargadoQR{},
+		&models.Comprobante{},
+	); err != nil {
+		log.Fatal("Error al migrar los modelos de la db:", err)
+	}
+
+	if err := seed.SeedDatosBolivia(db.GDB, "internal/sql/departamentos_provincias_bolivia.sql"); err != nil {
+		log.Printf("Error en el seed de Departamentos: %v", err)
+	}
+
+	if err := seed.SeedDatosCategoriaSubCategoria(db.GDB, "internal/sql/categorias_subcategorias.sql"); err != nil {
+		log.Printf("Error en el seed de Categorias: %v", err)
+	}
+
+	if err := seed.SeedDiaSemana(db.GDB, "internal/sql/dias_semana.sql"); err != nil {
+		log.Printf("Error en el seed de Dias: %v", err)
+	}
+
+	var count int64
+	err = db.GDB.Model(&models.Usuario{}).Count(&count).Error
+	if err == nil && count == 0 {
+		usuario := models.Usuario{
+			ID:              1,
+			Rol:             "admin",
+			Nombre:          "Juan",
+			ApellidoPaterno: "Pérez",
+			ApellidoMaterno: "Gómez",
+			FechaNacimiento: time.Date(1995, 6, 15, 0, 0, 0, 0, time.UTC),
+			CI:              "12345678",
+			Correo:          "juan.perez@example.com",
+			Telefono:        "70000000",
+			Contra:          "123456",
+			Estado:          true,
+			Foto:            "N/A",
+			IdUbicacion:     2,
+		}
+		if err := db.GDB.Create(&usuario).Error; err == nil {
+			log.Printf("Primer usuario creador exitosamente: %v", err)
+		} else {
+			log.Printf("Error al crear el primer usuario")
+			return
+		}
+	}
 
 	r := mux.NewRouter()
 	routers.InitEndPoints(r)
@@ -68,73 +139,3 @@ func main() {
 		log.Fatal("Error al iniciar el servidor:", err)
 	}
 }
-
-// if err := db.GDB.AutoMigrate(
-// 	/* migraciones */
-// 	&models.Usuario{},
-// 	&models.Agencia{},
-// 	&models.AtraccionTuristica{},
-
-// 	&models.PaqueteTuristico{},
-// 	&models.PaqueteAtraccion{},
-// 	&models.Reservas{},
-
-// 	&models.Departamento{},
-// 	&models.Provincia{},
-
-// 	&models.FotosAgencia{},
-// 	&models.FotosAtracciones{},
-
-// 	&models.Categoria{},
-// 	&models.SubCategoria{},
-
-// 	&models.Dia{},
-// 	&models.Salida{},
-// 	&models.VigenciaDiasConcurrentes{},
-// 	&models.VigenciaRango{},
-// 	&models.VigenciaUnica{},
-
-// 	&models.AtraccionesCategorias{},
-// 	&models.EncargadoQR{},
-// 	&models.Comprobante{},
-// ); err != nil {
-// 	log.Fatal("Error al migrar los modelos de la db:", err)
-// }
-
-// if err := seed.SeedDatosBolivia(db.GDB, "internal/sql/departamentos_provincias_bolivia.sql"); err != nil {
-// 	log.Printf("Error en el seed de Departamentos: %v", err)
-// }
-
-// if err := seed.SeedDatosCategoriaSubCategoria(db.GDB, "internal/sql/categorias_subcategorias.sql"); err != nil {
-// 	log.Printf("Error en el seed de Categorias: %v", err)
-// }
-
-// if err := seed.SeedDiaSemana(db.GDB, "internal/sql/dias_semana.sql"); err != nil {
-// 	log.Printf("Error en el seed de Dias: %v", err)
-// }
-
-// var count int64
-// err = db.GDB.Model(&models.Usuario{}).Count(&count).Error
-// if err == nil && count == 0 {
-// 	usuario := models.Usuario{
-// 		ID:              1,
-// 		Rol:             "admin",
-// 		Nombre:          "Juan",
-// 		ApellidoPaterno: "Pérez",
-// 		ApellidoMaterno: "Gómez",
-// 		FechaNacimiento: time.Date(1995, 6, 15, 0, 0, 0, 0, time.UTC),
-// 		CI:              "12345678",
-// 		Correo:          "juan.perez@example.com",
-// 		Telefono:        "70000000",
-// 		Contra:          "123456",
-// 		Estado:          true,
-// 		Foto:            "N/A",
-// 		IdUbicacion:     2,
-// 	}
-// 	if err := db.GDB.Create(&usuario).Error; err == nil {
-// 		log.Printf("Primer usuario creador exitosamente: %v", err)
-// 	} else {
-// 		log.Printf("Error al crear el primer usuario")
-// 		return
-// 	}
-// }
