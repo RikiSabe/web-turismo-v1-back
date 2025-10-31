@@ -43,6 +43,7 @@ func endPointsAPI(api *mux.Router) {
 	v1Dias := v1.PathPrefix("/dias").Subrouter()
 	v1Encargado := v1.PathPrefix("/encargado-qr").Subrouter()
 	v1Pagos := v1.PathPrefix("/pagos").Subrouter()
+	V1Operaciones := v1.PathPrefix("/operaciones").Subrouter()
 
 	// v2
 	v2Usuarios := v2.PathPrefix("/usuarios").Subrouter()
@@ -101,6 +102,7 @@ func endPointsAPI(api *mux.Router) {
 	v1PaquetesTuristicos.HandleFunc("/foto/{id}", c.ObtenerPaqueteTuristicoFoto).Methods(http.MethodGet)
 	v1PaquetesTuristicos.HandleFunc("", c.ObtenerPaquetesTuristicos).Methods(http.MethodGet)
 	v1PaquetesTuristicos.HandleFunc("", c.CrearPaqueteTuristico).Methods(http.MethodPost)
+	v1PaquetesTuristicos.HandleFunc("/usuario/{id}", c.ObtenerPaquetesTuristicosConReserva).Methods(http.MethodGet)
 
 	// Departamentos
 	v1Departamentos.HandleFunc("", c.ObtenerDepartamentos).Methods(http.MethodGet)
@@ -129,4 +131,7 @@ func endPointsAPI(api *mux.Router) {
 	v1Pagos.HandleFunc("/{id}", c.ReservasPagoUsuario).Methods(http.MethodGet)
 	v1Pagos.HandleFunc("", c.ObtenerReservasPago).Methods(http.MethodGet)
 	v1Pagos.HandleFunc("/comprobante/{id_usuario}/{id_reserva}", c.ObtenerDetallesComprobante).Methods(http.MethodGet)
+
+	// Operaciones
+	V1Operaciones.HandleFunc("", c.HacerOperacion).Methods(http.MethodPost)
 }

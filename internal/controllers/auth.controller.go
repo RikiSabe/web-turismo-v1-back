@@ -50,5 +50,42 @@ func (auth) AuthLoginWeb(w http.ResponseWriter, r *http.Request) {
 }
 
 func (auth) AuthRegisterWeb(w http.ResponseWriter, r *http.Request) {
+	var nuevoUsuario types.NewUsuario
 
+	if err := json.NewDecoder(r.Body).Decode(&nuevoUsuario); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	usuario := models.Usuario{
+		Nombre:          nuevoUsuario.Nombre,
+		ApellidoPaterno: nuevoUsuario.ApellidoPaterno,
+		ApellidoMaterno: nuevoUsuario.ApellidoMaterno,
+		Correo:          nuevoUsuario.Correo,
+		Contra:          nuevoUsuario.Contra,
+		IdUbicacion:     1,
+		Rol:             "turista",
+		Estado:          true,
+	}
+
+	tx := db.GDB.Begin()
+	if err := tx.Create(&usuario).Error; err != nil {
+		tx.Rollback()
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	tx.Commit()
+
+	respuesta := types.RespuestaUsuario{
+		ID:  usuario.ID,
+		Rol: usuario.Rol,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	if err := json.NewEncoder(w).Encode(&respuesta); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }

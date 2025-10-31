@@ -8,7 +8,9 @@ var QueryPaqueteTuristicoTODO = `
 		gpt.precio, 
 		gpt.hora_inicial, 
 		gpt.estado, 
-		gpt.visible
+		gpt.visible,
+		gpt.cupo_total,
+		gpt.cupo_minimo
 	FROM "GestPaquetesTuristicos" AS gpt
 	ORDER BY gpt.id_paquete_turistico;`
 

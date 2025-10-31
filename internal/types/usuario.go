@@ -57,3 +57,11 @@ type UsuarioDatosPrivados struct {
 type UsuarioFoto struct {
 	Foto string `json:"foto"`
 }
+
+type NewUsuario struct {
+	Nombre          string `json:"nombre"`
+	ApellidoPaterno string `json:"apellido_paterno"`
+	ApellidoMaterno string `json:"apellido_materno"`
+	Correo          string `json:"correo"`
+	Contra          string `json:"contra"`
+}

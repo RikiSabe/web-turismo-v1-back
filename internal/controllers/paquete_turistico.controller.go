@@ -369,3 +369,57 @@ func ObtenerPaqueteTuristicoFoto(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+
+func ObtenerPaquetesTuristicosConReserva(w http.ResponseWriter, r *http.Request) {
+	idUsuarioStr := mux.Vars(r)["id"]
+
+	idUsuario, err := strconv.ParseUint(idUsuarioStr, 10, 64)
+	if err != nil {
+		http.Error(w, "ID de usuario inválido", http.StatusBadRequest)
+		return
+	}
+
+	type PaqueteConReserva struct {
+		types.PaqueteTuristicoTODO
+		Reservado      bool       `json:"reservado"`
+		FechaReserva   *time.Time `json:"fecha_reserva,omitempty"`
+		IDReserva      *uint      `json:"id_reserva,omitempty"`
+		NumeroPersonas *int       `json:"numero_personas,omitempty"`
+	}
+
+	var paquetes []types.PaqueteTuristicoTODO
+
+	if err := db.GDB.Raw(services.QueryPaqueteTuristicoTODO).Scan(&paquetes).Error; err != nil {
+		http.Error(w, "Error en la consulta de paquetes", http.StatusInternalServerError)
+		return
+	}
+
+	paquetesConReserva := make([]PaqueteConReserva, 0, len(paquetes))
+
+	for _, paquete := range paquetes {
+		paqueteResp := PaqueteConReserva{
+			PaqueteTuristicoTODO: paquete,
+			Reservado:            false,
+		}
+
+		var reserva models.Reservas
+		result := db.GDB.Where("id_usuario = ? AND id_paquete = ? AND estado = ?",
+			idUsuario, paquete.ID, true).
+			First(&reserva)
+
+		if result.Error == nil {
+			paqueteResp.Reservado = true
+			paqueteResp.FechaReserva = &reserva.CreatedAt
+			paqueteResp.IDReserva = &reserva.ID
+			paqueteResp.NumeroPersonas = &reserva.NumeroPersonas
+		}
+
+		paquetesConReserva = append(paquetesConReserva, paqueteResp)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	if err := json.NewEncoder(w).Encode(paquetesConReserva); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}

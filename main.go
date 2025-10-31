@@ -58,6 +58,8 @@ func main() {
 		&models.AtraccionesCategorias{},
 		&models.EncargadoQR{},
 		&models.Comprobante{},
+
+		&models.Operacion{},
 	); err != nil {
 		log.Fatal("Error al migrar los modelos de la db:", err)
 	}
